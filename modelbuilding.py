@@ -147,3 +147,42 @@ with open(model_filename, 'wb') as file:
     pickle.dump(best_model, file)
 
 print(f"Best model ({best_model_name}) saved to {model_filename}")
+
+import streamlit as st
+import pandas as pd
+import pickle
+
+# --- Load the trained model ---
+# Assuming 'random_forest_regression_model.pkl' is in the same directory as this script
+try:
+    with open('random_forest_regression_model.pkl', 'rb') as file:
+        model = pickle.load(file)
+    st.success("Model loaded successfully!")
+except FileNotFoundError:
+    st.error("Error: Model file 'random_forest_regression_model.pkl' not found. Make sure it's in the same directory as app.py.")
+    st.stop() # Stop the app if the model can't be loaded
+
+# --- Streamlit App Interface ---
+st.title('Salary Prediction App')
+st.write('Enter the details below to predict the salary.')
+
+# Input fields for features
+age = st.slider('Age', 18, 65, 30)
+
+# For simplicity, using numerical input for encoded features. 
+# In a real app, you'd map string inputs to encoded values.
+gender = st.selectbox('Gender (0=Female, 1=Male)', [0, 1])
+education_level = st.slider('Education Level (Encoded)', 0, 5, 2) # Range based on typical LabelEncoder output
+job_title = st.slider('Job Title (Encoded)', 0, 200, 100) # Assuming a reasonable range for job titles
+years_of_experience = st.slider('Years of Experience', 0.0, 40.0, 5.0)
+
+# --- Prediction ---
+if st.button('Predict Salary'):
+    # Create a DataFrame from input values
+    input_data = pd.DataFrame([[age, gender, education_level, job_title, years_of_experience]],
+                              columns=['Age', 'Gender', 'Education Level', 'Job Title', 'Years of Experience'])
+
+    # Make prediction
+    prediction = model.predict(input_data)[0]
+
+    st.success(f'Predicted Salary: ${prediction:,.2f}')
